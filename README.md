@@ -4,7 +4,8 @@ Learn **Hiragana, Katakana and Kanji** with picture stories, native audio, anima
 
 ## Features
 
-- **Picture stories** for all 46 hiragana, 46 katakana and 97 JLPT N5 kanji, each stamped with its picture word, plus dakuten (が, ぱ…) and combos (きゃ…)
+- **Drawn memory illustrations** for all 46 hiragana, 46 katakana and 97 JLPT N5 kanji: the character's real strokes sit inside a little scene (ア is a dropped ice-cream cone, け a keg and a beer tap), with a *Test yourself* switch that fades the picture away
+- **Picture stories** with an emoji picture and a stamped picture word for every character, plus dakuten (が, ぱ…) and combos (きゃ…)
 - **Pronunciation**: native Japanese voice through the browser (normal and slow), a *Say it* microphone check (Chrome/Edge), and a guide to the tricky sounds (ふ, つ, R, long vowels, small っ, particles)
 - **Stroke order** animations from [KanjiVG](https://kanjivg.tagaini.net) and a **tracing pad** to write each character yourself
 - **Lessons** that walk a row one character at a time, then quiz it
@@ -38,4 +39,4 @@ npm run dev
 
 ## Credits
 
-Stroke order data: KanjiVG © Ulrich Apel, CC BY-SA 3.0. Fonts: Shippori Mincho, Zen Kaku Gothic New and Klee One (SIL OFL), self-hosted via Fontsource.
+Stroke order data: KanjiVG © Ulrich Apel, CC BY-SA 3.0. The bundled copy in `src/data/strokes.json` is shared under the same licence. Fonts: Shippori Mincho, Zen Kaku Gothic New and Klee One (SIL OFL), self-hosted via Fontsource.

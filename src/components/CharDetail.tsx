@@ -6,17 +6,35 @@ import Icon, { Seal } from './Icon'
 import StrokeOrder from './StrokeOrder'
 import WritingPad from './WritingPad'
 import SayIt from './SayIt'
+import Illustration, { hasIllustration } from './Illustration'
 
-// The picture story: the character in a practice square, stamped with its keyword seal.
+// The picture story: a drawn scene with the character's strokes inside it, stamped with its keyword seal.
+// "Test yourself" fades the scene away so only the bare character is left to recall.
 export function MnemonicCard({ item, compact = false }: { item: Item; compact?: boolean }) {
+  const [bare, setBare] = useState(false)
+  const drawn = hasIllustration(item.char)
   return (
     <div className={`mnemo ${compact ? 'compact' : ''}`}>
-      <div className="mnemo-pic">
-        <span className={`square-char ${item.script}`} aria-hidden>
-          <span className="mnemo-picture">{item.picture}</span>
-          <span className="mnemo-glyph">{item.char}</span>
-        </span>
-        <Seal text={item.keyword} size={compact ? 's' : 'm'} />
+      <div className="mnemo-col">
+        <div className={`mnemo-pic ${drawn ? 'drawn' : ''}`}>
+          {drawn ? (
+            <span className="illus-frame">
+              <Illustration char={item.char} size={compact ? 96 : 168} bare={bare} />
+              <span className="mnemo-badge" aria-hidden>{item.picture}</span>
+            </span>
+          ) : (
+            <span className={`square-char ${item.script}`} aria-hidden>
+              <span className="mnemo-picture">{item.picture}</span>
+              <span className="mnemo-glyph">{item.char}</span>
+            </span>
+          )}
+          <Seal text={item.keyword} size={compact ? 's' : 'm'} />
+        </div>
+        {drawn && !compact && (
+          <button className="btn small quiet bare-toggle" aria-pressed={bare} onClick={() => setBare((b) => !b)}>
+            <Icon name="eye" size={15} /> {bare ? 'Show the picture' : 'Test yourself'}
+          </button>
+        )}
       </div>
       <div className="mnemo-text">
         <div className="mnemo-head">

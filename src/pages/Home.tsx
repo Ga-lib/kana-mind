@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { ALL, hiragana, katakana, kanji } from '../data'
 import { dueIds, exportProgress, importProgress, mastery, MAX_IMPORT_BYTES, resetProgress, today, useStore } from '../lib/store'
 import Icon, { Seal, type IconName } from '../components/Icon'
-import StrokeOrder from '../components/StrokeOrder'
+import Illustration from '../components/Illustration'
 
 const SCRIPTS = [
   { key: 'hiragana', name: 'Hiragana', jp: 'ひらがな', sample: 'あ', items: hiragana, blurb: 'The curvy everyday script. Start here.' },
@@ -53,8 +53,8 @@ export default function Home() {
         </div>
         <figure className="hero-sheet" aria-label="Example: ね is a cat, neko, with a curly tail">
           <div className="hero-square">
-            <span className="hero-picture" aria-hidden>🐈</span>
-            <StrokeOrder char="ね" size={250} autoNumbers={false} />
+            <Illustration char="ね" size={250} />
+            <span className="hero-badge" aria-hidden>🐈</span>
             <span className="hero-stamp">
               <Seal text="neko" size="l" />
             </span>

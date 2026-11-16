@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Icon from './Icon'
+import { localStrokes } from '../lib/strokes'
 
 // Stroke data: KanjiVG (CC BY-SA 3.0, Ulrich Apel) — https://kanjivg.tagaini.net
 // Both sources are pinned to the same release tag so the content cannot change underneath us.
@@ -34,6 +35,9 @@ function loadStrokes(ch: string): Promise<string[] | null> {
     cache.set(
       ch,
       (async () => {
+        // Bundled data first; the pinned CDN copy only for characters not bundled (e.g. が, ぱ).
+        const bundled = await localStrokes(ch)
+        if (bundled) return bundled
         const f = fileName(ch)
         let text: string | null = null
         for (const src of SOURCES) {
