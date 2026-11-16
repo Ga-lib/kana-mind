@@ -7,20 +7,32 @@ import StrokeOrder from './StrokeOrder'
 import WritingPad from './WritingPad'
 import SayIt from './SayIt'
 import Illustration, { hasIllustration } from './Illustration'
+import Art from './Art'
 
-// The picture story: a drawn scene with the character's strokes inside it, stamped with its keyword seal.
-// "Test yourself" fades the scene away so only the bare character is left to recall.
+// The picture story. Three layers of memory hooks:
+//  1. a drawn scene with the character's real strokes inside it (hand-made for kana and the core kanji),
+//  2. a hand-drawn line illustration of the story's object (OpenMoji),
+//  3. for kanji, the building-block parts that make up the meaning.
+// "Test yourself" hides the pictures so only the bare character is left to recall.
 export function MnemonicCard({ item, compact = false }: { item: Item; compact?: boolean }) {
   const [bare, setBare] = useState(false)
   const drawn = hasIllustration(item.char)
+  const sketchBehind = !drawn && !!item.art
   return (
     <div className={`mnemo ${compact ? 'compact' : ''}`}>
       <div className="mnemo-col">
-        <div className={`mnemo-pic ${drawn ? 'drawn' : ''}`}>
+        <div className={`mnemo-pic ${drawn || sketchBehind ? 'drawn' : ''}`}>
           {drawn ? (
             <span className="illus-frame">
               <Illustration char={item.char} size={compact ? 96 : 168} bare={bare} />
-              <span className="mnemo-badge" aria-hidden>{item.picture}</span>
+              <span className="mnemo-badge" aria-hidden>
+                {item.art ? <Art id={item.art} size={compact ? 18 : 24} /> : item.picture}
+              </span>
+            </span>
+          ) : sketchBehind ? (
+            <span className={`illus-frame sketch-frame ${bare ? 'bare' : ''}`} style={{ width: compact ? 104 : 176, height: compact ? 104 : 176 }}>
+              <Art id={item.art} size={compact ? 96 : 168} className="sketch-behind" />
+              <span className={`sketch-glyph ${item.script}`} aria-hidden>{item.char}</span>
             </span>
           ) : (
             <span className={`square-char ${item.script}`} aria-hidden>
@@ -30,7 +42,7 @@ export function MnemonicCard({ item, compact = false }: { item: Item; compact?: 
           )}
           <Seal text={item.keyword} size={compact ? 's' : 'm'} />
         </div>
-        {drawn && !compact && (
+        {(drawn || sketchBehind) && !compact && (
           <button className="btn small quiet bare-toggle" aria-pressed={bare} onClick={() => setBare((b) => !b)}>
             <Icon name="eye" size={15} /> {bare ? 'Show the picture' : 'Test yourself'}
           </button>
@@ -44,7 +56,26 @@ export function MnemonicCard({ item, compact = false }: { item: Item; compact?: 
           </button>
         </div>
         <p>{item.mnemonic}</p>
+        {item.parts && item.parts.length > 1 && (
+          <div className="parts" aria-label="Building blocks">
+            {item.parts.map(([p, m], i) => (
+              <span key={p + i} className="part">
+                {i > 0 && <span className="plus">+</span>}
+                <span className="part-char jp">{p}</span>
+                <span className="part-m">{m}</span>
+              </span>
+            ))}
+            <span className="plus">=</span>
+            <span className="part"><span className="part-char jp">{item.char}</span><span className="part-m">{item.keyword}</span></span>
+          </div>
+        )}
       </div>
+      {drawn && item.art && !compact && (
+        <figure className="mnemo-sketch">
+          <Art id={item.art} size={96} label={item.keyword} />
+          <figcaption>{item.keyword}</figcaption>
+        </figure>
+      )}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 export type Script = 'hiragana' | 'katakana' | 'kanji'
+export type Level = 'n5' | 'n4' | 'n3'
 
 export interface Example {
   w: string // word
@@ -22,5 +23,7 @@ export interface Item {
   on?: string[]
   kun?: string[]
   examples?: Example[]
-  parts?: string
+  parts?: [string, string][] // kanji building blocks: [part, meaning]
+  level?: Level // JLPT level
+  art?: string // OpenMoji line-art file id in /art
 }

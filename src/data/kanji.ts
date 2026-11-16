@@ -157,11 +157,27 @@ function toRomaji(kana: string): string {
     や: 'ya', ゆ: 'yu', よ: 'yo', ら: 'ra', り: 'ri', る: 'ru', れ: 're', ろ: 'ro', わ: 'wa', を: 'wo', ん: 'n',
   }
   const small: Record<string, string> = { ゃ: 'ya', ゅ: 'yu', ょ: 'yo' }
+  const smallVowel: Record<string, string> = { ぁ: 'a', ぃ: 'i', ぅ: 'u', ぇ: 'e', ぉ: 'o' }
   let out = ''
   const chars = [...kana]
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i]
     const next = chars[i + 1]
+    if (c === 'ー') {
+      out += out.slice(-1).match(/[aeiou]/) ? out.slice(-1) : ''
+      continue
+    }
+    if (next && smallVowel[next]) {
+      const base = map[c] ?? ''
+      const head = base === 'fu' ? 'f' : base === 'chi' ? 'ch' : base === 'shi' ? 'sh' : base === 'ji' ? 'j' : base === 'te' ? 't' : base === 'de' ? 'd' : base === 'u' ? 'w' : base.slice(0, -1)
+      out += head + smallVowel[next]
+      i++
+      continue
+    }
+    if (smallVowel[c]) {
+      out += smallVowel[c]
+      continue
+    }
     if (c === 'っ') {
       const r = map[next] ?? ''
       out += r[0] ?? ''

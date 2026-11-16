@@ -1,13 +1,14 @@
-// Bundled KanjiVG stroke data (CC BY-SA 3.0, Ulrich Apel) for every character that has a lesson card.
-// Loaded lazily as its own chunk, so the first page load stays small.
-let data: Promise<Record<string, string[]>> | null = null
-
-function load() {
-  data ??= import('../data/strokes.json').then((m) => m.default as Record<string, string[]>)
-  return data
-}
+// Bundled KanjiVG stroke data (CC BY-SA 3.0, Ulrich Apel). Two lazy chunks:
+// the kana + hand-drawn lesson kanji (small, used everywhere) and the full N5–N3 kanji set.
+type Strokes = Record<string, string[]>
+let core: Promise<Strokes> | null = null
+let jlpt: Promise<Strokes> | null = null
 
 export async function localStrokes(char: string): Promise<string[] | null> {
-  const all = await load()
-  return all[char] ?? null
+  core ??= import('../data/strokes.json').then((m) => m.default as Strokes)
+  const a = await core
+  if (a[char]) return a[char]
+  if (!/[一-鿿]/.test(char)) return null
+  jlpt ??= import('../data/jlpt/kanji-strokes.json').then((m) => m.default as Strokes)
+  return (await jlpt)[char] ?? null
 }

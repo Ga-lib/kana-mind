@@ -7,7 +7,7 @@ import Illustration from '../components/Illustration'
 const SCRIPTS = [
   { key: 'hiragana', name: 'Hiragana', jp: 'ひらがな', sample: 'あ', items: hiragana, blurb: 'The curvy everyday script. Start here.' },
   { key: 'katakana', name: 'Katakana', jp: 'カタカナ', sample: 'ア', items: katakana, blurb: 'Angular twins for borrowed words like コーヒー.' },
-  { key: 'kanji', name: 'Kanji', jp: '漢字', sample: '山', items: kanji, blurb: `${kanji.length} beginner (JLPT N5) kanji built from picture stories.` },
+  { key: 'kanji', name: 'Kanji', jp: '漢字', sample: '山', items: kanji, blurb: `All ${kanji.length} JLPT N5 to N3 kanji, built from pictures and parts.` },
 ] as const
 
 const METHOD: [IconName, string, string][] = [

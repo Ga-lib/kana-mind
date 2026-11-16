@@ -4,6 +4,8 @@ import CharDetail, { MnemonicCard } from '../components/CharDetail'
 import Quiz from '../components/Quiz'
 import StrokeOrder from '../components/StrokeOrder'
 import Icon from '../components/Icon'
+import Art from '../components/Art'
+import type { Level } from '../data'
 import { speak } from '../lib/speech'
 import { useStore } from '../lib/store'
 
@@ -69,7 +71,8 @@ function Lesson({ items, onQuiz, onClose }: { items: Item[]; onQuiz: () => void;
 
 export default function Learn({ script }: { script: Script }) {
   const items = itemsOf(script)
-  const groups = groupsOf(script)
+  const [level, setLevel] = useState<Level>('n5')
+  const groups = groupsOf(script).filter((g) => script !== 'kanji' || g.level === level)
   const { cards } = useStore()
   const [open, setOpen] = useState<number | null>(null)
   const [lesson, setLesson] = useState<Item[] | null>(null)
@@ -99,6 +102,15 @@ export default function Learn({ script }: { script: Script }) {
           ))}
         </div>
       </div>
+      {script === 'kanji' && (
+        <div className="seg level-tabs" role="tablist" aria-label="JLPT level">
+          {(['n5', 'n4', 'n3'] as Level[]).map((l) => (
+            <button key={l} role="tab" aria-selected={level === l} className={level === l ? 'on' : ''} onClick={() => setLevel(l)}>
+              {l.toUpperCase()} <span className="muted">{items.filter((i) => groupsOf(script).find((g) => g.key === i.group)?.level === l).length}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <p className="muted intro">
         Open any character for its picture story, sound, strokes and practice pad, or start a lesson to go through a row one
         character at a time.
@@ -131,7 +143,7 @@ export default function Learn({ script }: { script: Script }) {
                     onClick={() => setOpen(items.indexOf(it))}
                     aria-label={`${it.char}, ${script === 'kanji' ? it.meaning : it.romaji}`}
                   >
-                    <span className="tile-picture" aria-hidden>{it.picture}</span>
+                    <span className="tile-picture" aria-hidden>{it.art ? <Art id={it.art} size={18} /> : it.picture}</span>
                     <span className={`tile-char ${script}`} aria-hidden>{it.char}</span>
                     <span className="tile-romaji">{script === 'kanji' ? it.meaning : it.romaji}</span>
                   </button>

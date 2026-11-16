@@ -5,6 +5,7 @@ import Practice from './pages/Practice'
 import Review from './pages/Review'
 import Lookalikes from './pages/Lookalikes'
 import Sounds from './pages/Sounds'
+import Words from './pages/Words'
 import { useStore } from './lib/store'
 import Icon, { type IconName } from './components/Icon'
 
@@ -27,6 +28,7 @@ function useHash() {
 const NAV: [string, string, IconName][] = [
   ['/', 'Home', 'home'],
   ['/learn/hiragana', 'Learn', 'book'],
+  ['/words', 'Words', 'words'],
   ['/practice', 'Practice', 'target'],
   ['/review', 'Review', 'cycle'],
   ['/lookalikes', 'Look-alikes', 'twins'],
@@ -54,6 +56,9 @@ export default function App() {
       break
     case 'lookalikes':
       page = <Lookalikes />
+      break
+    case 'words':
+      page = <Words />
       break
     case 'sounds':
       page = <Sounds />
@@ -98,7 +103,7 @@ export default function App() {
       </main>
       <footer>
         <p>
-          Stroke data from <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener noreferrer">KanjiVG</a> (CC BY-SA 3.0).
+          Stroke data from <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener noreferrer">KanjiVG</a> (CC BY-SA 3.0). Line art from <a href="https://openmoji.org" target="_blank" rel="noopener noreferrer">OpenMoji</a> (CC BY-SA 4.0). Kanji data from KANJIDIC (EDRDG, CC BY-SA); word lists from Jonathan Waller’s JLPT lists via open-anki-jlpt-decks.
           Audio uses your browser’s Japanese voice. Progress stays in this browser.
         </p>
       </footer>
