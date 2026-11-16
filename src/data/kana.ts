@@ -1,4 +1,5 @@
 import type { Item, Script } from './types'
+import { PICTURES } from './pictures'
 
 // [char, romaji, keyword, mnemonic]
 type Row = [string, string, string, string]
@@ -177,6 +178,7 @@ function build(script: Script, rows: Row[]): Item[] {
     romaji,
     group: groupOf(romaji),
     keyword,
+    picture: PICTURES[char] ?? "",
     mnemonic,
     tip: TIPS[romaji] || undefined,
     speak: char,
@@ -195,6 +197,7 @@ function build(script: Script, rows: Row[]): Item[] {
         romaji: v,
         group: 'dakuten',
         keyword: 'buzz marks',
+        picture: base.picture,
         mnemonic: `${base.char} (${base.romaji}) + ゛ two "buzz" marks. The marks make your throat buzz, so ${base.romaji[0] === 'f' ? 'h' : base.romaji[0]} → ${v[0]}.`,
         tip:
           base.romaji === 'chi' || base.romaji === 'tsu'
@@ -213,6 +216,7 @@ function build(script: Script, rows: Row[]): Item[] {
         romaji: p,
         group: 'dakuten',
         keyword: 'pop circle',
+        picture: '⭕',
         mnemonic: `${base.char} + ゜ a little circle. Picture your lips making a round "P"-op bubble: h → p.`,
         speak: char,
       })
@@ -233,6 +237,7 @@ function build(script: Script, rows: Row[]): Item[] {
         romaji,
         group: 'combo',
         keyword: 'glide',
+        picture: '🧲',
         mnemonic: `${baseItem.char} (${b}) + small ${small} (y${v}). The small kana glues onto the one before it and they blend into ONE beat: ${b} + y${v} → ${romaji}.`,
         speak: char,
       })

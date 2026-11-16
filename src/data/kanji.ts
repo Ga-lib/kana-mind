@@ -1,4 +1,5 @@
 import type { Item } from './types'
+import { PICTURES } from './pictures'
 
 // [char, meaning, on'yomi, kun'yomi, mnemonic, examples "word|reading|meaning;..."] grouped by theme
 type K = [string, string, string, string, string, string]
@@ -200,6 +201,7 @@ export const kanji: Item[] = KANJI_GROUPS.flatMap((g) =>
       romaji: toRomaji(first),
       group: g.key,
       keyword: meaning.split(",")[0],
+      picture: PICTURES[char] ?? "",
       mnemonic,
       meaning,
       on: onList,

@@ -90,7 +90,7 @@ export default function Lookalikes() {
                 return (
                   <button key={c} className="look-char" onClick={() => speak(it.speak)} aria-label={`${c}, ${it.romaji}. Play sound`}>
                     <span className="lc square">{c}</span>
-                    <span className="muted">{it.romaji}</span>
+                    <span className="muted">{it.romaji} {it.picture}</span>
                   </button>
                 )
               })}

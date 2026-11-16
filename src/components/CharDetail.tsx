@@ -12,7 +12,10 @@ export function MnemonicCard({ item, compact = false }: { item: Item; compact?: 
   return (
     <div className={`mnemo ${compact ? 'compact' : ''}`}>
       <div className="mnemo-pic">
-        <span className={`square-char ${item.script}`} aria-hidden>{item.char}</span>
+        <span className={`square-char ${item.script}`} aria-hidden>
+          <span className="mnemo-picture">{item.picture}</span>
+          <span className="mnemo-glyph">{item.char}</span>
+        </span>
         <Seal text={item.keyword} size={compact ? 's' : 'm'} />
       </div>
       <div className="mnemo-text">

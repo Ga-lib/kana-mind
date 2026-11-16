@@ -131,6 +131,7 @@ export default function Learn({ script }: { script: Script }) {
                     onClick={() => setOpen(items.indexOf(it))}
                     aria-label={`${it.char}, ${script === 'kanji' ? it.meaning : it.romaji}`}
                   >
+                    <span className="tile-picture" aria-hidden>{it.picture}</span>
                     <span className={`tile-char ${script}`} aria-hidden>{it.char}</span>
                     <span className="tile-romaji">{script === 'kanji' ? it.meaning : it.romaji}</span>
                   </button>

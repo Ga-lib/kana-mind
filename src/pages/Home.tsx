@@ -53,6 +53,7 @@ export default function Home() {
         </div>
         <figure className="hero-sheet" aria-label="Example: ね is a cat, neko, with a curly tail">
           <div className="hero-square">
+            <span className="hero-picture" aria-hidden>🐈</span>
             <StrokeOrder char="ね" size={250} autoNumbers={false} />
             <span className="hero-stamp">
               <Seal text="neko" size="l" />
