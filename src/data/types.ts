@@ -12,7 +12,7 @@ export interface Item {
   char: string
   romaji: string // for kanji: main reading in romaji
   group: string
-  emoji: string
+  keyword: string // the picture word the mnemonic hangs on
   mnemonic: string
   tip?: string
   speak: string // text sent to the speech engine

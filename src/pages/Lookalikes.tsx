@@ -3,6 +3,7 @@ import { BY_CHAR, LOOKALIKES } from '../data'
 import { speak } from '../lib/speech'
 import { record } from '../lib/store'
 import { shuffle } from '../lib/util'
+import Icon from '../components/Icon'
 
 function Drill({ onExit }: { onExit: () => void }) {
   const make = () => {
@@ -25,20 +26,25 @@ function Drill({ onExit }: { onExit: () => void }) {
   }
 
   return (
-    <div className="card quiz">
+    <div className="panel quiz">
       <div className="quiz-top">
-        <button className="btn small ghost-btn" onClick={onExit}>✕ Stop</button>
-        <span className="muted">{score.r}/{score.n}</span>
+        <button className="btn small quiet" onClick={onExit}>
+          <Icon name="close" size={16} /> Stop
+        </button>
+        <span className="muted tnum">{score.r} of {score.n} right</span>
       </div>
-      <div className="q-label">Which one is…</div>
-      <div className="q-prompt romaji-prompt">
-        {item.romaji} <button className="icon-btn" onClick={() => speak(item.speak)}>🔊</button>
+      <p className="q-label">Which one is this?</p>
+      <div className="q-prompt romaji-prompt" key={q.target + score.n}>
+        {item.romaji}
+        <button className="icon-btn" aria-label="Play the sound" onClick={() => speak(item.speak)}>
+          <Icon name="speaker" size={26} />
+        </button>
       </div>
       <div className="options char-opts">
         {q.opts.map((c) => (
           <button
             key={c}
-            className={`opt ${pick ? (c === q.target ? 'right' : c === pick ? 'wrong' : 'dim') : ''}`}
+            className={`opt square-opt ${pick ? (c === q.target ? 'right' : c === pick ? 'wrong' : 'dim') : ''}`}
             onClick={() => choose(c)}
           >
             {c}
@@ -47,8 +53,11 @@ function Drill({ onExit }: { onExit: () => void }) {
       </div>
       {pick && (
         <div className="feedback">
-          <div className="tip">{q.g.hint}</div>
-          <button className="btn accent" onClick={() => { setQ(make()); setPick(null) }}>Next →</button>
+          <div className="tip">
+            <Icon name="eye" size={20} />
+            <p>{q.g.hint}</p>
+          </div>
+          <button className="btn primary" onClick={() => { setQ(make()); setPick(null) }}>Next pair</button>
         </div>
       )}
     </div>
@@ -65,19 +74,23 @@ export default function Lookalikes() {
     )
   return (
     <div className="page">
-      <h1>Look-alikes</h1>
-      <p className="muted">These are the pairs that trip everyone up. Learn the one difference that tells them apart, then drill them.</p>
-      <button className="btn accent big" onClick={() => setDrill(true)}>Start look-alike drill 👯</button>
+      <div className="page-head">
+        <h1>Look-alikes</h1>
+        <button className="btn primary" onClick={() => setDrill(true)}>
+          <Icon name="twins" size={18} /> Start the drill
+        </button>
+      </div>
+      <p className="muted intro">These sets trip everyone up. Learn the one difference that tells them apart, then drill them.</p>
       <div className="look-grid">
         {LOOKALIKES.map((g) => (
-          <div key={g.chars.join()} className="card look">
+          <div key={g.chars.join()} className="panel look">
             <div className="look-chars">
               {g.chars.map((c) => {
                 const it = BY_CHAR.get(c)!
                 return (
-                  <button key={c} className="look-char" onClick={() => speak(it.speak)}>
-                    <span className="lc">{c}</span>
-                    <span className="muted">{it.romaji} {it.emoji}</span>
+                  <button key={c} className="look-char" onClick={() => speak(it.speak)} aria-label={`${c}, ${it.romaji}. Play sound`}>
+                    <span className="lc square">{c}</span>
+                    <span className="muted">{it.romaji}</span>
                   </button>
                 )
               })}

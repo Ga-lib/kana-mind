@@ -4,15 +4,16 @@ import { speak } from '../lib/speech'
 import { record } from '../lib/store'
 import { sample, shuffle } from '../lib/util'
 import { MnemonicCard } from './CharDetail'
+import Icon from './Icon'
 
 export type Mode = 'pick-romaji' | 'type-romaji' | 'pick-char' | 'listen' | 'reading'
 
 export const MODE_LABEL: Record<Mode, string> = {
-  'pick-romaji': 'See → choose sound',
-  'type-romaji': 'See → type sound',
-  'pick-char': 'Sound → choose character',
-  listen: 'Hear → choose character',
-  reading: 'Kanji word → choose reading',
+  'pick-romaji': 'See it, choose the sound',
+  'type-romaji': 'See it, type the sound',
+  'pick-char': 'Read the sound, choose the character',
+  listen: 'Hear it, choose the character',
+  reading: 'Read the word, choose its reading',
 }
 
 interface Q {
@@ -76,7 +77,10 @@ function makeQ(item: Item, modes: Mode[]): Q {
 export default function Quiz({ items, modes, title, onExit }: { items: Item[]; modes: Mode[]; title: string; onExit: () => void }) {
   const [seed, setSeed] = useState(0)
   const [queue, setQueue] = useState<Item[]>(() => shuffle(items))
-  const questions = useMemo(() => queue.map((it) => makeQ(it, modes)), [queue, modes, seed])
+  // Keyed on the mode list's contents, not its identity: parents pass a fresh array each render.
+  const modeKey = modes.join(",")
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const questions = useMemo(() => queue.map((it) => makeQ(it, modes)), [queue, modeKey, seed])
   const [idx, setIdx] = useState(0)
   const [chosen, setChosen] = useState<string | null>(null)
   const [typed, setTyped] = useState('')
@@ -131,12 +135,12 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
     const pct = Math.round((score / questions.length) * 100)
     return (
       <div className="quiz card">
-        <h2>{pct >= 90 ? '🎉 Excellent!' : pct >= 60 ? '👍 Good work' : '💪 Keep going'}</h2>
+        <h2 className="result-title">{pct >= 90 ? 'Excellent' : pct >= 60 ? 'Good work' : 'Keep going'}</h2>
         <div className="score-ring" style={{ ['--p' as string]: pct }}>
           <span>{pct}%</span>
         </div>
         <p className="center-text">
-          {score} / {questions.length} correct. Your misses come back sooner in Review; correct ones are spaced further apart.
+          {score} of {questions.length} correct. Your misses come back sooner in Review; correct ones are spaced further apart.
         </p>
         {missed.length > 0 && (
           <>
@@ -151,7 +155,7 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
         <div className="row gap-s center">
           {missed.length > 0 && (
             <button
-              className="btn accent"
+              className="btn primary"
               onClick={() => {
                 setQueue(shuffle([...new Map(missed.map((m) => [m.id, m])).values()]))
                 setSeed((s) => s + 1)
@@ -175,7 +179,7 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
           >
             Again
           </button>
-          <button className="btn ghost-btn" onClick={onExit}>Done</button>
+          <button className="btn quiet" onClick={onExit}>Done</button>
         </div>
       </div>
     )
@@ -185,22 +189,22 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
   return (
     <div className="quiz card">
       <div className="quiz-top">
-        <button className="btn small ghost-btn" onClick={onExit}>✕ Quit</button>
+        <button className="btn small quiet" onClick={onExit}><Icon name="close" size={16} /> Quit</button>
         <span className="muted">{title}</span>
-        <span className="muted">{idx + 1}/{questions.length}</span>
+        <span className="muted tnum">{idx + 1} of {questions.length}</span>
       </div>
-      <div className="progress"><div style={{ width: `${(idx / questions.length) * 100}%` }} /></div>
+      <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={idx}><div style={{ width: `${(idx / questions.length) * 100}%` }} /></div>
 
       <div className="q-label">{MODE_LABEL[q.mode]}</div>
-      <div className={`q-prompt ${q.mode === 'pick-char' ? 'romaji-prompt' : ''} ${q.item.script}`}>
+      <div key={idx} className={`q-prompt ${q.mode === 'pick-char' ? 'romaji-prompt' : ''} ${q.item.script}`}>
         {q.mode === 'listen' ? (
-          <button className="listen-btn" onClick={() => speak(q.item.speak)}>🔊</button>
+          <button className="listen-btn" aria-label="Play the sound again" onClick={() => speak(q.item.speak)}><Icon name="speaker" size={44} /></button>
         ) : (
           q.prompt
         )}
       </div>
       {q.mode === 'listen' && (
-        <button className="btn small ghost-btn center-block" onClick={() => speak(q.item.speak, 0.5)}>🐢 slower</button>
+        <button className="btn small quiet center-block" onClick={() => speak(q.item.speak, 0.5)}><Icon name="slow" size={16} /> Slowly</button>
       )}
 
       {q.mode === 'type-romaji' ? (
@@ -216,14 +220,15 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
             ref={inputRef}
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
-            placeholder="type romaji, e.g. ka"
+            placeholder="Type the sound, e.g. ka"
+            aria-label="Your answer in romaji"
             autoCapitalize="off"
             autoComplete="off"
             spellCheck={false}
             readOnly={chosen !== null}
             className={chosen === null ? '' : correct ? 'right' : 'wrong'}
           />
-          <button className="btn accent">{chosen === null ? 'Check' : 'Next →'}</button>
+          <button className="btn primary">{chosen === null ? 'Check' : 'Next'}</button>
         </form>
       ) : (
         <div className={`options ${isCharOpt ? 'char-opts' : ''}`}>
@@ -241,15 +246,15 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
 
       {chosen !== null && !correct && (
         <div className="feedback">
-          <div className="bad">
-            Not quite: <b className={q.item.script}>{q.item.char}</b> = <b>{q.mode === 'reading' ? q.answer : label(q.item)}</b>
+          <div className="bad feedback-line">
+            <Icon name="cross" size={18} /> Not quite: <b className={q.item.script}>{q.item.char}</b> = <b>{q.mode === 'reading' ? q.answer : label(q.item)}</b>
             {q.mode === 'reading' && q.exampleIdx !== undefined && <> ({q.item.examples![q.exampleIdx].m})</>}
           </div>
           <MnemonicCard item={q.item} compact />
-          {q.mode !== 'type-romaji' && <button className="btn accent" onClick={next}>Next → <span className="muted">(Enter)</span></button>}
+          {q.mode !== 'type-romaji' && <button className="btn primary" onClick={next}>Next <kbd>Enter</kbd></button>}
         </div>
       )}
-      {chosen !== null && correct && <div className="good center-text pop">✓ {q.item.char} = {q.mode === 'reading' ? q.answer : label(q.item)}</div>}
+      {chosen !== null && correct && <div className="good center-text pop" role="status"><Icon name="check" size={20} /> {q.item.char} = {q.mode === 'reading' ? q.answer : label(q.item)}</div>}
     </div>
   )
 }

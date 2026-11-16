@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Icon from './Icon'
 
 export default function WritingPad({ char, size = 240 }: { char: string; size?: number }) {
   const ref = useRef<HTMLCanvasElement>(null)
@@ -32,8 +33,10 @@ export default function WritingPad({ char, size = 240 }: { char: string; size?: 
     if (!drawing.current || !last.current) return
     const ctx = ref.current!.getContext('2d')!
     const p = pos(e)
-    ctx.strokeStyle = getComputedStyle(ref.current!).getPropertyValue('--ink').trim() || '#222'
-    ctx.lineWidth = size / 18
+    // Pressure-aware width gives a brush feel on pens; mice get a steady line.
+    const pressure = e.pressure && e.pointerType === 'pen' ? 0.6 + e.pressure : 1
+    ctx.strokeStyle = getComputedStyle(ref.current!).getPropertyValue('--sumi').trim() || '#1C1E24'
+    ctx.lineWidth = (size / 17) * pressure
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctx.beginPath()
@@ -50,13 +53,14 @@ export default function WritingPad({ char, size = 240 }: { char: string; size?: 
 
   return (
     <div className="pad-wrap">
-      <div className="pad" style={{ width: size, height: size }}>
+      <div className="pad square" style={{ width: size, height: size }}>
         {trace && <div className="pad-ghost" style={{ fontSize: size * (char.length > 1 ? 0.45 : 0.78) }}>{char}</div>}
         <canvas
           ref={ref}
           width={size * 2}
           height={size * 2}
           style={{ width: size, height: size }}
+          aria-label={`Drawing area for ${char}`}
           onPointerDown={down}
           onPointerMove={move}
           onPointerUp={up}
@@ -64,12 +68,14 @@ export default function WritingPad({ char, size = 240 }: { char: string; size?: 
         />
       </div>
       <div className="row gap-s center">
-        <button className="btn small" onClick={clear}>Clear</button>
-        <button className="btn small ghost-btn" onClick={() => setTrace((t) => !t)}>
-          {trace ? 'Hide guide' : 'Show guide'}
+        <button className="btn small" onClick={clear}>
+          <Icon name="eraser" size={16} /> Clear
         </button>
-        <span className="muted small-text">{strokes} drawn</span>
+        <button className="btn small quiet" aria-pressed={trace} onClick={() => setTrace((t) => !t)}>
+          <Icon name="eye" size={16} /> {trace ? 'Hide guide' : 'Show guide'}
+        </button>
       </div>
+      <span className="muted small-text">{strokes} {strokes === 1 ? 'stroke' : 'strokes'} drawn</span>
     </div>
   )
 }

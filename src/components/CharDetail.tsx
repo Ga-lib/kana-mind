@@ -1,22 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Item } from '../data'
 import { speak } from '../lib/speech'
 import { setNote, useStore } from '../lib/store'
+import Icon, { Seal } from './Icon'
 import StrokeOrder from './StrokeOrder'
 import WritingPad from './WritingPad'
 import SayIt from './SayIt'
 
+// The picture story: the character in a practice square, stamped with its keyword seal.
 export function MnemonicCard({ item, compact = false }: { item: Item; compact?: boolean }) {
   return (
     <div className={`mnemo ${compact ? 'compact' : ''}`}>
-      <div className="mnemo-pic" aria-hidden>
-        <span className="mnemo-emoji">{item.emoji}</span>
-        <span className={`mnemo-char ${item.script}`}>{item.char}</span>
+      <div className="mnemo-pic">
+        <span className={`square-char ${item.script}`} aria-hidden>{item.char}</span>
+        <Seal text={item.keyword} size={compact ? 's' : 'm'} />
       </div>
       <div className="mnemo-text">
         <div className="mnemo-head">
           <span className="romaji">{item.script === 'kanji' ? item.meaning : item.romaji}</span>
-          <button className="icon-btn" title="Hear it" onClick={() => speak(item.speak)}>🔊</button>
+          <button className="icon-btn" aria-label={`Play ${item.char}`} onClick={() => speak(item.speak)}>
+            <Icon name="speaker" />
+          </button>
         </div>
         <p>{item.mnemonic}</p>
       </div>
@@ -28,6 +32,7 @@ export default function CharDetail({ item, onClose, onPrev, onNext }: { item: It
   const { notes, cards } = useStore()
   const [note, setLocal] = useState(notes[item.id] ?? '')
   const [tab, setTab] = useState<'learn' | 'write'>('learn')
+  const sheetRef = useRef<HTMLDivElement>(null)
   const card = cards[item.id]
 
   useEffect(() => {
@@ -35,6 +40,18 @@ export default function CharDetail({ item, onClose, onPrev, onNext }: { item: It
     speak(item.speak)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.id])
+
+  // Focus the dialog, lock page scroll, restore focus on close.
+  useEffect(() => {
+    const prev = document.activeElement as HTMLElement | null
+    sheetRef.current?.focus()
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = overflow
+      prev?.focus?.()
+    }
+  }, [])
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -49,95 +66,122 @@ export default function CharDetail({ item, onClose, onPrev, onNext }: { item: It
 
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={`${item.char} details`} tabIndex={-1} ref={sheetRef} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-top">
-          <button className="icon-btn" onClick={onPrev} disabled={!onPrev} aria-label="Previous">‹</button>
-          <div className="tabs">
-            <button className={tab === 'learn' ? 'on' : ''} onClick={() => setTab('learn')}>Picture & sound</button>
-            <button className={tab === 'write' ? 'on' : ''} onClick={() => setTab('write')}>Strokes & writing</button>
+          <button className="icon-btn" onClick={onPrev} disabled={!onPrev} aria-label="Previous character">
+            <Icon name="left" />
+          </button>
+          <div className="tabs" role="tablist">
+            <button role="tab" aria-selected={tab === 'learn'} className={tab === 'learn' ? 'on' : ''} onClick={() => setTab('learn')}>
+              Story and sound
+            </button>
+            <button role="tab" aria-selected={tab === 'write'} className={tab === 'write' ? 'on' : ''} onClick={() => setTab('write')}>
+              Write it
+            </button>
           </div>
-          <button className="icon-btn" onClick={onNext} disabled={!onNext} aria-label="Next">›</button>
-          <button className="icon-btn close" onClick={onClose} aria-label="Close">✕</button>
+          <button className="icon-btn" onClick={onNext} disabled={!onNext} aria-label="Next character">
+            <Icon name="right" />
+          </button>
+          <button className="icon-btn close" onClick={onClose} aria-label="Close">
+            <Icon name="close" />
+          </button>
         </div>
 
-        {tab === 'learn' ? (
-          <div className="detail">
-            <div className="detail-hero">
-              <div className={`big-char ${item.script}`}>{item.char}</div>
-              <div>
-                {item.script === 'kanji' ? (
-                  <>
-                    <div className="meaning">{item.meaning}</div>
-                    <div className="readings">
-                      {item.on && item.on.length > 0 && <div><b>On</b> {item.on.join('・')} <span className="muted">(Chinese-based, in compounds)</span></div>}
-                      {item.kun && item.kun.length > 0 && <div><b>Kun</b> {item.kun.join('・')} <span className="muted">(native Japanese, alone)</span></div>}
-                    </div>
-                  </>
-                ) : (
-                  <div className="romaji-big">{item.romaji}</div>
-                )}
-                <div className="row gap-s">
-                  <button className="btn" onClick={() => speak(item.speak)}>🔊 Listen</button>
-                  <button className="btn ghost-btn" onClick={() => speak(item.speak, 0.5)}>🐢 Slow</button>
-                </div>
-                {card && (
-                  <div className="muted small-text" style={{ marginTop: 8 }}>
-                    Memory level {card.box}/6 · {card.right}✓ {card.wrong}✗
+        <div className="tab-panel" key={item.id + tab}>
+          {tab === 'learn' ? (
+            <div className="detail">
+              <div className="detail-hero">
+                <div className={`big-char square ${item.script}`}>{item.char}</div>
+                <div className="detail-side">
+                  {item.script === 'kanji' ? (
+                    <>
+                      <div className="meaning">{item.meaning}</div>
+                      <dl className="readings">
+                        {item.on && item.on.length > 0 && (
+                          <div><dt>On</dt><dd>{item.on.join('、')}</dd><span className="muted small-text">in compounds</span></div>
+                        )}
+                        {item.kun && item.kun.length > 0 && (
+                          <div><dt>Kun</dt><dd>{item.kun.join('、')}</dd><span className="muted small-text">on its own</span></div>
+                        )}
+                      </dl>
+                    </>
+                  ) : (
+                    <div className="romaji-big">{item.romaji}</div>
+                  )}
+                  <div className="row gap-s">
+                    <button className="btn primary" onClick={() => speak(item.speak)}>
+                      <Icon name="speaker" size={18} /> Listen
+                    </button>
+                    <button className="btn quiet" onClick={() => speak(item.speak, 0.5)}>
+                      <Icon name="slow" size={18} /> Slowly
+                    </button>
                   </div>
-                )}
+                  {card && (
+                    <div className="memory-meter" aria-label={`Memory level ${card.box} of 6`}>
+                      {[1, 2, 3, 4, 5, 6].map((b) => (
+                        <i key={b} className={b <= card.box ? 'on' : ''} />
+                      ))}
+                      <span className="muted small-text">
+                        {card.right} right, {card.wrong} missed
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              <MnemonicCard item={item} />
+
+              {item.tip && (
+                <div className="tip">
+                  <Icon name="lips" size={20} />
+                  <p><b>How to say it.</b> {item.tip}</p>
+                </div>
+              )}
+
+              {item.examples && (
+                <div className="examples">
+                  <h4>Words you will meet</h4>
+                  {item.examples.map((ex) => (
+                    <button key={ex.w} className="example" onClick={() => speak(ex.r)}>
+                      <span className="ex-w">{ex.w}</span>
+                      <span className="ex-r">{ex.r}</span>
+                      <span className="ex-m">{ex.m}</span>
+                      <Icon name="speaker" size={18} />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <SayIt item={item} />
+
+              <label className="note">
+                <span><Icon name="pencil" size={16} /> Your own memory story</span>
+                <textarea
+                  value={note}
+                  maxLength={1000}
+                  placeholder="Stories you invent yourself stick best. What does this shape remind you of?"
+                  onChange={(e) => setLocal(e.target.value)}
+                  onBlur={() => setNote(item.id, note)}
+                />
+              </label>
             </div>
-
-            <MnemonicCard item={item} />
-
-            {item.tip && (
-              <div className="tip">
-                <b>👄 How to say it:</b> {item.tip}
+          ) : (
+            <div className="detail write-grid">
+              <div className="write-col">
+                <h4>Watch the strokes</h4>
+                <StrokeOrder char={item.char} />
               </div>
-            )}
-
-            {item.examples && (
-              <div className="examples">
-                <h4>Words you will meet</h4>
-                {item.examples.map((ex) => (
-                  <button key={ex.w} className="example" onClick={() => speak(ex.r)}>
-                    <span className="ex-w">{ex.w}</span>
-                    <span className="ex-r">{ex.r}</span>
-                    <span className="ex-m">{ex.m}</span>
-                    <span>🔊</span>
-                  </button>
-                ))}
+              <div className="write-col">
+                <h4>Trace it yourself</h4>
+                <WritingPad char={item.char} />
               </div>
-            )}
-
-            <SayIt item={item} />
-
-            <label className="note">
-              <span>✏️ Your own memory story (the ones you invent stick best)</span>
-              <textarea
-                value={note}
-                placeholder="e.g. It looks like my cat curled on the sofa…"
-                onChange={(e) => setLocal(e.target.value)}
-                onBlur={() => setNote(item.id, note)}
-              />
-            </label>
-          </div>
-        ) : (
-          <div className="detail write-grid">
-            <div>
-              <h4>Watch the stroke order</h4>
-              <StrokeOrder char={item.char} />
+              <p className="muted small-text full">
+                Top before bottom, left before right, horizontals before the verticals that cross them. Say the sound aloud as
+                you write: sight, sound and movement give the memory three hooks instead of one.
+              </p>
             </div>
-            <div>
-              <h4>Now trace it yourself</h4>
-              <WritingPad char={item.char} />
-            </div>
-            <p className="muted small-text full">
-              Rules of thumb: top before bottom, left before right, horizontal before vertical that crosses it. Writing by hand
-              while saying the sound aloud uses three memory channels at once.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )

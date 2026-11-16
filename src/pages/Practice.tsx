@@ -33,7 +33,7 @@ export default function Practice() {
   return (
     <div className="page narrow">
       <h1>Practice</h1>
-      <div className="card form">
+      <div className="panel form">
         <div className="field">
           <span className="field-label">Script</span>
           <div className="seg">
@@ -44,14 +44,14 @@ export default function Practice() {
         </div>
         <div className="field">
           <span className="field-label">
-            Rows <button className="link" onClick={() => setSel(groups.map((g) => g.key))}>all</button> ·{' '}
+            Rows <button className="link" onClick={() => setSel(groups.map((g) => g.key))}>all</button>{' '}
             <button className="link" onClick={() => setSel([])}>none</button>
           </span>
           <div className="chips">
             {groups.map((g) => (
               <button
                 key={g.key}
-                className={`chip ${sel.includes(g.key) ? 'on' : ''}`}
+                className={`chip ${sel.includes(g.key) ? 'on' : ''}`} aria-pressed={sel.includes(g.key)}
                 onClick={() => setSel(sel.includes(g.key) ? sel.filter((x) => x !== g.key) : [...sel, g.key])}
               >
                 {g.label}
@@ -65,24 +65,24 @@ export default function Practice() {
             {allowed.map((m) => (
               <button
                 key={m}
-                className={`chip ${modes.includes(m) ? 'on' : ''}`}
+                className={`chip ${modes.includes(m) ? 'on' : ''}`} aria-pressed={modes.includes(m)}
                 onClick={() => setModes(modes.includes(m) ? modes.filter((x) => x !== m) : [...modes, m])}
               >
-                {script === 'kanji' && m === 'pick-romaji' ? 'See → choose meaning' : script === 'kanji' && m === 'pick-char' ? 'Meaning → choose kanji' : MODE_LABEL[m]}
+                {script === 'kanji' && m === 'pick-romaji' ? 'See it, choose the meaning' : script === 'kanji' && m === 'pick-char' ? 'Meaning, choose the kanji' : MODE_LABEL[m]}
               </button>
             ))}
           </div>
         </div>
         <div className="field">
-          <span className="field-label">Questions: {Math.min(count, pool.length)}</span>
-          <input type="range" min={5} max={60} step={5} value={count} onChange={(e) => setCount(+e.target.value)} />
+          <label className="field-label" htmlFor="qcount">Questions: <span className="tnum">{Math.min(count, pool.length)}</span></label>
+          <input id="qcount" type="range" min={5} max={60} step={5} value={count} onChange={(e) => setCount(+e.target.value)} />
         </div>
         <button
-          className="btn accent big"
+          className="btn primary big"
           disabled={!pool.length || !modes.length}
           onClick={() => setRunning({ items: sample(pool, Math.min(count, pool.length)) })}
         >
-          Start {pool.length ? `(${Math.min(count, pool.length)} of ${pool.length})` : ''}
+          Start practice
         </button>
       </div>
     </div>
