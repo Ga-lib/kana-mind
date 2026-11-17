@@ -25,7 +25,7 @@ export default function Review() {
       <div className="page narrow">
         <Quiz
           items={started.map((id) => BY_ID.get(id)!).filter(Boolean)}
-          modes={['pick-romaji', 'pick-char', 'listen', 'type-romaji', 'reading']}
+          modes={['pick-romaji', 'pick-char', 'listen', 'type-romaji', 'reading', 'write']}
           title="Spaced review"
           onExit={() => setStarted(null)}
         />

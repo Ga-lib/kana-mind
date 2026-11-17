@@ -5,8 +5,9 @@ import { record } from '../lib/store'
 import { sample, shuffle } from '../lib/util'
 import { MnemonicCard } from './CharDetail'
 import Icon from './Icon'
+import WriteCheck from './WriteCheck'
 
-export type Mode = 'pick-romaji' | 'type-romaji' | 'pick-char' | 'listen' | 'reading'
+export type Mode = 'pick-romaji' | 'type-romaji' | 'pick-char' | 'listen' | 'reading' | 'write'
 
 export const MODE_LABEL: Record<Mode, string> = {
   'pick-romaji': 'See it, choose the sound',
@@ -14,6 +15,7 @@ export const MODE_LABEL: Record<Mode, string> = {
   'pick-char': 'Read the sound, choose the character',
   listen: 'Hear it, choose the character',
   reading: 'Read the word, choose its reading',
+  write: 'Hear it, write it from memory',
 }
 
 interface Q {
@@ -53,6 +55,7 @@ function makeQ(item: Item, modes: Mode[]): Q {
     (v, i, a) => a.findIndex((x) => label(x) === label(v)) === i,
   )
 
+  if (mode === 'write') return { item, mode, prompt: label(item), options: [], answer: item.char }
   if (mode === 'reading' && item.examples) {
     const exampleIdx = Math.floor(Math.random() * item.examples.length)
     const ex = item.examples[exampleIdx]
@@ -92,7 +95,7 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
 
   useEffect(() => {
     if (!q) return
-    if (q.mode === 'listen') setTimeout(() => speak(q.item.speak), 150)
+    if (q.mode === 'listen' || q.mode === 'write') setTimeout(() => speak(q.item.speak), 150)
     if (q.mode === 'type-romaji') setTimeout(() => inputRef.current?.focus(), 50)
   }, [idx, q])
 
@@ -108,6 +111,17 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
     if (ok) {
       setScore((s) => s + 1)
       setTimeout(next, 750)
+    } else setMissed((m) => [...m, q.item])
+  }
+
+  // Writing questions: passing needs every stroke right, in order, first time.
+  const written = (passed: boolean) => {
+    if (chosen !== null || !q) return
+    setChosen(passed ? q.answer : '—')
+    record(q.item.id, passed)
+    if (passed) {
+      setScore((s) => s + 1)
+      setTimeout(next, 1400)
     } else setMissed((m) => [...m, q.item])
   }
 
@@ -196,18 +210,22 @@ export default function Quiz({ items, modes, title, onExit }: { items: Item[]; m
       <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={idx}><div style={{ width: `${(idx / questions.length) * 100}%` }} /></div>
 
       <div className="q-label">{MODE_LABEL[q.mode]}</div>
-      <div key={idx} className={`q-prompt ${q.mode === 'pick-char' ? 'romaji-prompt' : ''} ${q.item.script}`}>
+      <div key={idx} className={`q-prompt ${q.mode === 'pick-char' || q.mode === 'write' ? 'romaji-prompt' : ''} ${q.item.script}`}>
         {q.mode === 'listen' ? (
           <button className="listen-btn" aria-label="Play the sound again" onClick={() => speak(q.item.speak)}><Icon name="speaker" size={44} /></button>
         ) : (
           q.prompt
         )}
       </div>
-      {q.mode === 'listen' && (
+      {(q.mode === 'listen' || q.mode === 'write') && (
         <button className="btn small quiet center-block" onClick={() => speak(q.item.speak, 0.5)}><Icon name="slow" size={16} /> Slowly</button>
       )}
 
-      {q.mode === 'type-romaji' ? (
+      {q.mode === 'write' ? (
+        <div className="quiz-write">
+          <WriteCheck key={idx} text={q.item.char} speakText={q.item.speak} mode="memory" allowModeSwitch={false} size={250} onResult={written} />
+        </div>
+      ) : q.mode === 'type-romaji' ? (
         <form
           className="type-form"
           onSubmit={(e) => {

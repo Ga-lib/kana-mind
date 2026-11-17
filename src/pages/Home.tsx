@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react'
 import { ALL, hiragana, katakana, kanji } from '../data'
-import { dueIds, exportProgress, importProgress, mastery, MAX_IMPORT_BYTES, resetProgress, today, useStore } from '../lib/store'
+import { dueIds, mastery, today, useStore } from '../lib/store'
+import ProgressTools from '../components/ProgressTools'
+import { useAccount } from '../lib/account'
 import Icon, { Seal, type IconName } from '../components/Icon'
 import Illustration from '../components/Illustration'
 
@@ -19,22 +20,10 @@ const METHOD: [IconName, string, string][] = [
 
 export default function Home() {
   const store = useStore()
+  const { user } = useAccount()
   const due = dueIds(ALL.map((i) => i.id)).length
   const answeredToday = store.history[today()] ?? 0
   const goal = 40
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [msg, setMsg] = useState('')
-
-  const doExport = () => {
-    const url = URL.createObjectURL(new Blob([exportProgress()], { type: 'application/json' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'kanamind-progress.json'
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-    setMsg('Progress exported.')
-  }
-
   return (
     <div className="page">
       <section className="hero">
@@ -77,7 +66,7 @@ export default function Home() {
 
       <section className="today panel">
         <div className="today-main">
-          <h2>Today</h2>
+          <h2>{user ? `Today, ${user.name || "welcome back"}` : "Today"}</h2>
           <div className="progress big-bar" role="progressbar" aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(goal, answeredToday)}>
             <div style={{ width: `${Math.min(100, (answeredToday / goal) * 100)}%` }} />
           </div>
@@ -127,36 +116,7 @@ export default function Home() {
         </ul>
       </section>
 
-      <section className="data-tools" aria-label="Your progress file">
-        <button className="btn small quiet" onClick={doExport}>
-          <Icon name="download" size={16} /> Export progress
-        </button>
-        <button className="btn small quiet" onClick={() => fileRef.current?.click()}>
-          <Icon name="upload" size={16} /> Import progress
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json,.json"
-          hidden
-          onChange={async (e) => {
-            const f = e.target.files?.[0]
-            e.target.value = ''
-            if (!f) return
-            if (f.size > MAX_IMPORT_BYTES) return setMsg('That file is too large to be a KanaMind progress file.')
-            try {
-              const n = importProgress(await f.text())
-              setMsg(`Imported progress for ${n} characters.`)
-            } catch {
-              setMsg('That file is not a KanaMind progress file.')
-            }
-          }}
-        />
-        <button className="btn small quiet" onClick={() => confirm('Erase all progress saved in this browser?') && (resetProgress(), setMsg('Progress erased.'))}>
-          <Icon name="reset" size={16} /> Erase progress
-        </button>
-        <p className="small-text muted full-row" role="status">{msg}</p>
-      </section>
+      <ProgressTools />
     </div>
   )
 }

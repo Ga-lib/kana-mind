@@ -4,10 +4,11 @@ import CharDetail, { MnemonicCard } from '../components/CharDetail'
 import Quiz from '../components/Quiz'
 import StrokeOrder from '../components/StrokeOrder'
 import Icon from '../components/Icon'
+import WriteCheck from '../components/WriteCheck'
 import Art from '../components/Art'
 import type { Level } from '../data'
 import { speak } from '../lib/speech'
-import { useStore } from '../lib/store'
+import { record, useStore } from '../lib/store'
 
 const TABS: [Script, string, string][] = [
   ['hiragana', 'Hiragana', 'ひらがな'],
@@ -45,7 +46,10 @@ function Lesson({ items, onQuiz, onClose }: { items: Item[]; onQuiz: () => void;
               ))}
             </div>
           )}
-          <StrokeOrder char={it.char} size={170} />
+          <div className="lesson-write">
+            <div className="write-col"><h4>Watch</h4><StrokeOrder char={it.char} size={170} /></div>
+            <div className="write-col"><h4>Write it</h4><WriteCheck text={it.char} speakText={it.speak} size={210} onResult={(passed) => record(it.id, passed)} /></div>
+          </div>
           <p className="muted small-text center-text">
             Close your eyes, picture the scene for three seconds, then say “{it.script === 'kanji' ? it.examples?.[0].r : it.char}” out loud.
           </p>

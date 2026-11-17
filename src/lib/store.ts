@@ -13,7 +13,7 @@ export interface Card {
   wrong: number
 }
 
-interface State {
+export interface State {
   cards: Record<string, Card>
   notes: Record<string, string>
   streak: { last: string; count: number }
@@ -33,7 +33,7 @@ const num = (v: unknown, min: number, max: number, fallback = 0) =>
 
 // Rebuild state from untrusted JSON (localStorage or an imported file): only known
 // character ids and well-typed, bounded fields survive. Unknown keys are dropped.
-function sanitize(input: unknown): State {
+export function sanitize(input: unknown): State {
   if (!isObj(input)) return empty
   const cards: Record<string, Card> = {}
   if (isObj(input.cards)) {
@@ -73,9 +73,13 @@ function sanitize(input: unknown): State {
   }
 }
 
-function load(): State {
+// Where progress is cached in this browser: the guest key, or one key per signed-in account.
+export const GUEST_KEY = KEY
+let storageKey = KEY
+
+export function loadFrom(key: string): State {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(key)
     if (raw && raw.length <= MAX_IMPORT_BYTES) return sanitize(JSON.parse(raw))
   } catch {
     /* storage unavailable or corrupt */
@@ -83,17 +87,65 @@ function load(): State {
   return empty
 }
 
-let state: State = load()
+let state: State = loadFrom(KEY)
 const listeners = new Set<() => void>()
+const changeListeners = new Set<(s: State) => void>()
 
-function save(next: State) {
-  state = next
+function persist() {
   try {
-    localStorage.setItem(KEY, JSON.stringify(state))
+    localStorage.setItem(storageKey, JSON.stringify(state))
   } catch {
     /* ignore */
   }
+}
+
+/** A learner action changed progress: cache it locally and tell the cloud sync. */
+function save(next: State) {
+  state = next
+  persist()
   listeners.forEach((l) => l())
+  changeListeners.forEach((l) => l(state))
+}
+
+/** Swap in another profile's progress (sign-in / sign-out) without triggering a cloud write. */
+export function switchProfile(key: string, next: State) {
+  storageKey = key
+  state = next
+  persist()
+  listeners.forEach((l) => l())
+}
+
+export function onProgressChange(cb: (s: State) => void): () => void {
+  changeListeners.add(cb)
+  return () => changeListeners.delete(cb)
+}
+
+export function getState(): State {
+  return state
+}
+
+export function hasProgress(s: State): boolean {
+  return Object.keys(s.cards).length > 0 || Object.keys(s.notes).length > 0 || s.xp > 0
+}
+
+/** Combine two copies of progress (e.g. this device and the cloud) without losing either side's learning. */
+export function mergeStates(a: State, b: State): State {
+  const cards: Record<string, Card> = { ...a.cards }
+  for (const [id, c] of Object.entries(b.cards)) {
+    const x = cards[id]
+    if (!x || c.seen > x.seen || (c.seen === x.seen && c.due > x.due)) cards[id] = c
+  }
+  const notes: Record<string, string> = { ...b.notes }
+  for (const [id, n] of Object.entries(a.notes)) if (n) notes[id] = n
+  const history: Record<string, number> = { ...a.history }
+  for (const [d, n] of Object.entries(b.history)) history[d] = Math.max(history[d] ?? 0, n)
+  const streak =
+    a.streak.last === b.streak.last
+      ? { last: a.streak.last, count: Math.max(a.streak.count, b.streak.count) }
+      : a.streak.last > b.streak.last
+        ? a.streak
+        : b.streak
+  return { cards, notes, history, streak, xp: Math.max(a.xp, b.xp) }
 }
 
 export function useStore(): State {
@@ -149,7 +201,7 @@ export function resetProgress() {
 }
 
 export function exportProgress(): string {
-  return JSON.stringify(state)
+  return JSON.stringify({ app: 'kanamind', version: 1, exportedAt: new Date().toISOString(), ...state }, null, 1)
 }
 
 // Throws if the file is too large or not JSON; otherwise keeps only valid fields.

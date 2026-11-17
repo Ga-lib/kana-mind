@@ -6,6 +6,8 @@ import Review from './pages/Review'
 import Lookalikes from './pages/Lookalikes'
 import Sounds from './pages/Sounds'
 import Words from './pages/Words'
+import Account from './pages/Account'
+import { useAccount } from './lib/account'
 import { useStore } from './lib/store'
 import Icon, { type IconName } from './components/Icon'
 
@@ -38,6 +40,7 @@ const NAV: [string, string, IconName][] = [
 export default function App() {
   const route = useHash()
   const { streak, xp } = useStore()
+  const { user, ready } = useAccount()
   const parts = route.split('/').filter(Boolean)
 
   let page
@@ -56,6 +59,9 @@ export default function App() {
       break
     case 'lookalikes':
       page = <Lookalikes />
+      break
+    case 'account':
+      page = <Account />
       break
     case 'words':
       page = <Words />
@@ -96,6 +102,16 @@ export default function App() {
           <span title="Points" aria-label={`${xp} points`}>
             <Icon name="blossom" size={18} className="blossom" /> <b className="tnum">{xp}</b>
           </span>
+          <a href="#/account" className={`account-btn ${user ? 'in' : ''} ${section === 'account' ? 'on' : ''}`} aria-label={user ? `Account: ${user.email ?? ''}` : 'Sign in'}>
+            {user ? (
+              <span className="avatar" aria-hidden>{(user.name || user.email || '?').slice(0, 1).toUpperCase()}</span>
+            ) : (
+              <>
+                <Icon name="user" size={18} />
+                <span className="account-text">{ready ? 'Sign in' : ''}</span>
+              </>
+            )}
+          </a>
         </div>
       </header>
       <main id="main" key={section + (parts[1] ?? '')} className="route">
@@ -104,7 +120,7 @@ export default function App() {
       <footer>
         <p>
           Stroke data from <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener noreferrer">KanjiVG</a> (CC BY-SA 3.0). Line art from <a href="https://openmoji.org" target="_blank" rel="noopener noreferrer">OpenMoji</a> (CC BY-SA 4.0). Kanji data from KANJIDIC (EDRDG, CC BY-SA); word lists from Jonathan Waller’s JLPT lists via open-anki-jlpt-decks.
-          Audio uses your browser’s Japanese voice. Progress stays in this browser.
+          Audio uses your browser’s Japanese voice. Sign in to keep your progress in your own account.
         </p>
       </footer>
     </>

@@ -29,7 +29,7 @@ async function fetchText(url: string): Promise<string | null> {
   }
 }
 
-function loadStrokes(ch: string): Promise<string[] | null> {
+export function loadStrokes(ch: string): Promise<string[] | null> {
   if (!/^[぀-ヿ一-鿿]$/.test(ch)) return Promise.resolve(null)
   if (!cache.has(ch)) {
     cache.set(

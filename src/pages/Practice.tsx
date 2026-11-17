@@ -3,8 +3,8 @@ import { groupsOf, itemsOf, type Script } from '../data'
 import Quiz, { MODE_LABEL, type Mode } from '../components/Quiz'
 import { sample } from '../lib/util'
 
-const KANA_MODES: Mode[] = ['pick-romaji', 'type-romaji', 'pick-char', 'listen']
-const KANJI_MODES: Mode[] = ['pick-romaji', 'pick-char', 'reading', 'listen']
+const KANA_MODES: Mode[] = ['pick-romaji', 'type-romaji', 'pick-char', 'listen', 'write']
+const KANJI_MODES: Mode[] = ['pick-romaji', 'pick-char', 'reading', 'listen', 'write']
 
 export default function Practice() {
   const [script, setScript] = useState<Script>('hiragana')

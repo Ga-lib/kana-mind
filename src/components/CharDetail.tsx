@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Item } from '../data'
 import { speak } from '../lib/speech'
-import { setNote, useStore } from '../lib/store'
+import { record, setNote, useStore } from '../lib/store'
 import Icon, { Seal } from './Icon'
 import StrokeOrder from './StrokeOrder'
-import WritingPad from './WritingPad'
+import WriteCheck from './WriteCheck'
 import SayIt from './SayIt'
 import Illustration, { hasIllustration } from './Illustration'
 import Art from './Art'
@@ -224,8 +224,8 @@ export default function CharDetail({ item, onClose, onPrev, onNext }: { item: It
                 <StrokeOrder char={item.char} />
               </div>
               <div className="write-col">
-                <h4>Trace it yourself</h4>
-                <WritingPad char={item.char} />
+                <h4>Now write it</h4>
+                <WriteCheck text={item.char} speakText={item.speak} onResult={(passed) => record(item.id, passed)} />
               </div>
               <p className="muted small-text full">
                 Top before bottom, left before right, horizontals before the verticals that cross them. Say the sound aloud as
