@@ -5,6 +5,7 @@ import Quiz from '../components/Quiz'
 import StrokeOrder from '../components/StrokeOrder'
 import Icon from '../components/Icon'
 import WriteCheck from '../components/WriteCheck'
+import { useSwipe } from '../lib/useSwipe'
 import Art from '../components/Art'
 import type { Level } from '../data'
 import { speak } from '../lib/speech'
@@ -18,10 +19,14 @@ const TABS: [Script, string, string][] = [
 
 function Lesson({ items, onQuiz, onClose }: { items: Item[]; onQuiz: () => void; onClose: () => void }) {
   const [i, setI] = useState(0)
+  const [dir, setDir] = useState<'next' | 'prev' | ''>('')
   const it = items[i]
+  const goNext = i < items.length - 1 ? () => { setDir('next'); setI(i + 1); speak(items[i + 1].speak) } : undefined
+  const goPrev = i > 0 ? () => { setDir('prev'); setI(i - 1) } : undefined
+  const swipe = useSwipe(goNext, goPrev)
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="sheet lesson" role="dialog" aria-modal="true" aria-label="Lesson" onClick={(e) => e.stopPropagation()}>
+      <div className="sheet lesson" role="dialog" aria-modal="true" aria-label="Lesson" onClick={(e) => e.stopPropagation()} {...swipe}>
         <div className="sheet-top">
           <span className="muted tnum">Lesson, {i + 1} of {items.length}</span>
           <button className="icon-btn close" onClick={onClose} aria-label="Close lesson">
@@ -29,7 +34,8 @@ function Lesson({ items, onQuiz, onClose }: { items: Item[]; onQuiz: () => void;
           </button>
         </div>
         <div className="progress"><div style={{ width: `${((i + 1) / items.length) * 100}%` }} /></div>
-        <div className="lesson-body" key={it.id}>
+        <p className="swipe-hint" aria-hidden>Swipe left or right to move through the lesson</p>
+        <div className={`lesson-body ${dir ? 'slide-' + dir : ''}`} key={it.id}>
           <MnemonicCard item={it} />
           {it.tip && (
             <div className="tip">
@@ -55,11 +61,11 @@ function Lesson({ items, onQuiz, onClose }: { items: Item[]; onQuiz: () => void;
           </p>
         </div>
         <div className="row gap-s center">
-          <button className="btn quiet" disabled={i === 0} onClick={() => setI(i - 1)}>
+          <button className="btn quiet" disabled={!goPrev} onClick={goPrev}>
             <Icon name="left" size={16} /> Back
           </button>
           {i < items.length - 1 ? (
-            <button className="btn primary" onClick={() => { setI(i + 1); speak(items[i + 1].speak) }}>
+            <button className="btn primary" onClick={goNext}>
               Next <Icon name="right" size={16} />
             </button>
           ) : (

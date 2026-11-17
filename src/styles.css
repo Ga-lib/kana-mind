@@ -795,3 +795,12 @@ input[type='range'] { accent-color: var(--ai); width: 100%; max-width: 420px; }
 .prose p, .prose li { max-width: 68ch; }
 .prose ul { padding-left: 1.2em; }
 .prose li { margin: 6px 0; }
+
+/* swipe navigation */
+.sheet { touch-action: pan-y; }
+.tab-panel.slide-next, .lesson-body.slide-next { animation: slide-next 0.28s var(--ease); }
+.tab-panel.slide-prev, .lesson-body.slide-prev { animation: slide-prev 0.28s var(--ease); }
+@keyframes slide-next { from { opacity: 0; transform: translateX(36px); } }
+@keyframes slide-prev { from { opacity: 0; transform: translateX(-36px); } }
+.swipe-hint { display: none; margin: -4px 0 8px; text-align: center; font-size: 0.78rem; color: var(--muted); }
+@media (hover: none) and (pointer: coarse) { .swipe-hint { display: block; } }

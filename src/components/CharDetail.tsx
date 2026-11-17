@@ -8,6 +8,7 @@ import WriteCheck from './WriteCheck'
 import SayIt from './SayIt'
 import Illustration, { hasIllustration } from './Illustration'
 import Art from './Art'
+import { useSwipe } from '../lib/useSwipe'
 
 // The picture story. Three layers of memory hooks:
 //  1. a drawn scene with the character's real strokes inside it (hand-made for kana and the core kanji),
@@ -85,7 +86,12 @@ export default function CharDetail({ item, onClose, onPrev, onNext }: { item: It
   const [note, setLocal] = useState(notes[item.id] ?? '')
   const [tab, setTab] = useState<'learn' | 'write'>('learn')
   const sheetRef = useRef<HTMLDivElement>(null)
+  const [dir, setDir] = useState<'next' | 'prev' | ''>('')
   const card = cards[item.id]
+  // One place for every way of moving between characters: arrows, keys, swipes.
+  const goNext = onNext ? () => { setDir('next'); onNext() } : undefined
+  const goPrev = onPrev ? () => { setDir('prev'); onPrev() } : undefined
+  const swipe = useSwipe(goNext, goPrev)
 
   useEffect(() => {
     setLocal(notes[item.id] ?? '')
@@ -107,31 +113,31 @@ export default function CharDetail({ item, onClose, onPrev, onNext }: { item: It
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLTextAreaElement) return
+      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return
       if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft') onPrev?.()
-      if (e.key === 'ArrowRight') onNext?.()
+      if (e.key === 'ArrowLeft') goPrev?.()
+      if (e.key === 'ArrowRight') goNext?.()
     }
     window.addEventListener('keydown', k)
     return () => window.removeEventListener('keydown', k)
-  }, [onClose, onPrev, onNext])
+  })
 
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={`${item.char} details`} tabIndex={-1} ref={sheetRef} onClick={(e) => e.stopPropagation()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={`${item.char} details`} tabIndex={-1} ref={sheetRef} onClick={(e) => e.stopPropagation()} {...swipe}>
         <div className="sheet-top">
-          <button className="icon-btn" onClick={onPrev} disabled={!onPrev} aria-label="Previous character">
+          <button className="icon-btn" onClick={goPrev} disabled={!goPrev} aria-label="Previous character">
             <Icon name="left" />
           </button>
           <div className="tabs" role="tablist">
-            <button role="tab" aria-selected={tab === 'learn'} className={tab === 'learn' ? 'on' : ''} onClick={() => setTab('learn')}>
+            <button role="tab" aria-selected={tab === 'learn'} className={tab === 'learn' ? 'on' : ''} onClick={() => { setDir(''); setTab('learn') }}>
               Story and sound
             </button>
-            <button role="tab" aria-selected={tab === 'write'} className={tab === 'write' ? 'on' : ''} onClick={() => setTab('write')}>
+            <button role="tab" aria-selected={tab === 'write'} className={tab === 'write' ? 'on' : ''} onClick={() => { setDir(''); setTab('write') }}>
               Write it
             </button>
           </div>
-          <button className="icon-btn" onClick={onNext} disabled={!onNext} aria-label="Next character">
+          <button className="icon-btn" onClick={goNext} disabled={!goNext} aria-label="Next character">
             <Icon name="right" />
           </button>
           <button className="icon-btn close" onClick={onClose} aria-label="Close">
@@ -139,7 +145,8 @@ export default function CharDetail({ item, onClose, onPrev, onNext }: { item: It
           </button>
         </div>
 
-        <div className="tab-panel" key={item.id + tab}>
+        <p className="swipe-hint" aria-hidden>Swipe left or right for the next or previous character</p>
+        <div className={`tab-panel ${dir ? 'slide-' + dir : ''}`} key={item.id + tab}>
           {tab === 'learn' ? (
             <div className="detail">
               <div className="detail-hero">
