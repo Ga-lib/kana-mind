@@ -9,6 +9,8 @@ import Words from './pages/Words'
 import Account from './pages/Account'
 import { useAccount } from './lib/account'
 import SpeechNotice from './components/SpeechNotice'
+import ErrorBoundary from './components/ErrorBoundary'
+import Privacy from './pages/Privacy'
 import { useStore } from './lib/store'
 import Icon, { type IconName } from './components/Icon'
 
@@ -60,6 +62,9 @@ export default function App() {
       break
     case 'lookalikes':
       page = <Lookalikes />
+      break
+    case 'privacy':
+      page = <Privacy />
       break
     case 'account':
       page = <Account />
@@ -116,13 +121,13 @@ export default function App() {
         </div>
       </header>
       <main id="main" key={section + (parts[1] ?? '')} className="route">
-        {page}
+        <ErrorBoundary key={route}>{page}</ErrorBoundary>
       </main>
       <SpeechNotice />
       <footer>
         <p>
           Stroke data from <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener noreferrer">KanjiVG</a> (CC BY-SA 3.0). Line art from <a href="https://openmoji.org" target="_blank" rel="noopener noreferrer">OpenMoji</a> (CC BY-SA 4.0). Kanji data from KANJIDIC (EDRDG, CC BY-SA); word lists from Jonathan Waller’s JLPT lists via open-anki-jlpt-decks.
-          Audio uses your browser’s Japanese voice. Sign in to keep your progress in your own account.
+          Audio uses your browser’s Japanese voice. Sign in to keep your progress in your own account. <a href="#/privacy">Privacy</a>
         </p>
       </footer>
     </>

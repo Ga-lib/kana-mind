@@ -28,7 +28,8 @@ React 18 + TypeScript + Vite 6, plain CSS, a custom SVG icon set, self-hosted fo
 ## Security
 
 - Static site with no custom server code. Accounts and storage use Firebase Auth and Cloud Firestore. `firestore.rules` lets a signed-in user get, create, update and delete only `kanamind_users/{their uid}`, validates the document shape, and denies everything else (listing, other users, signed-out visitors).
-- Cloud writes wait until the account's cloud copy has loaded, so an offline sign-in can never overwrite real progress. Signing out removes the account's local copy from the browser.
+- Sync never overwrites: each save is a Firestore transaction that merges this device's progress with the cloud copy, and a live listener merges changes from other devices. Erase and Import carry a replace timestamp so an older copy elsewhere can't bring erased progress back. Cloud writes wait until the account's cloud copy has loaded, sign-out refuses to drop unsaved progress without asking, and signing out removes the account's copy from the browser.
+- Users can delete their account (after re-confirming their password or Google sign-in): their progress document and login are removed. A privacy page explains what is stored where.
 - Strict security headers in `vercel.json`: a Content-Security-Policy allowing only same-origin scripts, styles and fonts plus the exact Firebase, Google sign-in and pinned stroke-data hosts; `frame-ancestors none`, HSTS, `nosniff`, a referrer policy, and a Permissions-Policy that allows only the microphone, on this site only.
 - `npm run preview` serves the same headers, so CSP problems show up locally.
 - Saved and imported progress is treated as untrusted: size-capped, then rebuilt field by field (known character ids only, bounded numbers, capped note length).

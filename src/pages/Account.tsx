@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { authMessage, clearNotice, resetPassword, signIn, signInWithGoogle, signOutUser, signUp, useAccount, type SyncStatus } from '../lib/account'
+import { authMessage, clearNotice, deleteAccount, resetPassword, signIn, signInWithGoogle, signOutUser, signUp, useAccount, type SyncStatus } from '../lib/account'
 import { useStore } from '../lib/store'
 import Icon from '../components/Icon'
 import ProgressTools from '../components/ProgressTools'
@@ -35,7 +35,13 @@ function SignedIn() {
           disabled={busy}
           onClick={async () => {
             setBusy(true)
-            await signOutUser()
+            const r = await signOutUser()
+            if (!r.ok) {
+              const force = confirm(
+                'Some of your latest progress hasn’t reached your account yet (you seem to be offline).\n\nSign out anyway and lose that unsaved progress? Choose Cancel to stay signed in and try again when you’re online.',
+              )
+              if (force) await signOutUser(true)
+            }
             setBusy(false)
           }}
         >
@@ -54,7 +60,67 @@ function SignedIn() {
         <div className="panel stat"><b className="tnum">{learned}</b><span className="muted small-text">characters learning or mastered</span></div>
       </div>
       <ProgressTools />
+      <DeleteAccount provider={user.provider} />
     </>
+  )
+}
+
+function DeleteAccount({ provider }: { provider: string }) {
+  const [open, setOpen] = useState(false)
+  const [pw, setPw] = useState('')
+  const [typed, setTyped] = useState('')
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  if (!open)
+    return (
+      <div className="danger-zone">
+        <button className="btn small quiet danger" onClick={() => setOpen(true)}>
+          <Icon name="reset" size={15} /> Delete my account
+        </button>
+      </div>
+    )
+  return (
+    <form
+      className="panel danger-zone open"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        setErr('')
+        setBusy(true)
+        try {
+          await deleteAccount(provider === 'Email' ? pw : undefined)
+        } catch (e) {
+          setErr(authMessage(e))
+          setBusy(false)
+        }
+      }}
+    >
+      <h2>Delete your account</h2>
+      <p className="small-text">
+        This permanently deletes your login and all progress saved in your account: memory levels, review schedule, notes,
+        streak and points. It can’t be undone. Export your progress first if you might want it back.
+      </p>
+      {provider === 'Email' ? (
+        <label className="auth-form-label">
+          <span>Confirm with your password</span>
+          <input type="password" autoComplete="current-password" value={pw} maxLength={128} onChange={(e) => setPw(e.target.value)} />
+        </label>
+      ) : (
+        <p className="small-text muted">You’ll confirm with Google in a pop-up.</p>
+      )}
+      <label className="auth-form-label">
+        <span>Type DELETE to confirm</span>
+        <input value={typed} maxLength={10} autoCapitalize="characters" onChange={(e) => setTyped(e.target.value)} />
+      </label>
+      {err && <p className="bad small-text" role="alert">{err}</p>}
+      <div className="row gap-s">
+        <button className="btn danger-solid" disabled={busy || typed !== 'DELETE' || (provider === 'Email' && !pw)}>
+          {busy ? 'Deleting…' : 'Delete account permanently'}
+        </button>
+        <button type="button" className="btn quiet" disabled={busy} onClick={() => { setOpen(false); setErr(''); setPw(''); setTyped('') }}>
+          Cancel
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -146,6 +212,11 @@ function SignedOut() {
               <input type={show ? 'text' : 'password'} required maxLength={128} value={pw2} autoComplete="new-password" onChange={(e) => setPw2(e.target.value)} />
             </label>
           )}
+          {tab === 'up' && (
+            <p className="muted small-text">
+              By creating an account you agree to how we handle your data, described in the <a href="#/privacy">privacy policy</a>.
+            </p>
+          )}
           {err && <p className="bad small-text" role="alert">{err}</p>}
           {info && <p className="good small-text" role="status">{info}</p>}
           <button className="btn primary big" disabled={busy || !email || !pw}>
@@ -175,7 +246,7 @@ function SignedOut() {
           <li>Your progress, streak, notes and review schedule are saved to your own account.</li>
           <li>Pick up where you left off on any phone or computer.</li>
           <li>Anything you learned before signing in on this device is added to your account.</li>
-          <li>Only you can see or change your progress.</li>
+          <li>Only you can see or change your progress. You can export it, erase it or delete your account at any time. See the <a href="#/privacy">privacy policy</a>.</li>
         </ul>
         <ProgressTools />
       </div>

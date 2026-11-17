@@ -6,12 +6,15 @@ import '@fontsource/zen-kaku-gothic-new/latin-700.css'
 import '@fontsource/shippori-mincho/latin-800.css'
 import '@fontsource/klee-one/400.css'
 import App from './App'
+import ErrorBoundary from './components/ErrorBoundary'
 import { startAccount } from './lib/account'
 import './styles.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary full>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 )
 

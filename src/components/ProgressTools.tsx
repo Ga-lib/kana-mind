@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { exportProgress, importProgress, MAX_IMPORT_BYTES, resetProgress } from '../lib/store'
-import { flush, useAccount } from '../lib/account'
+import { markReplaced, useAccount } from '../lib/account'
 import Icon from './Icon'
 
 /** Export / import / erase. Works on the active profile: the signed-in account (synced) or this browser. */
@@ -43,7 +43,7 @@ export default function ProgressTools() {
           if (!confirm(`Replace the progress in ${where} with this file?`)) return
           try {
             const n = importProgress(await f.text())
-            if (user) await flush()
+            if (user && !(await markReplaced())) return setMsg('Saved on this device. It will reach your account when you’re back online.')
             setMsg(`Imported progress for ${n} characters into ${where}.`)
           } catch {
             setMsg('That file is not a KanaMind progress file.')
@@ -55,7 +55,7 @@ export default function ProgressTools() {
         onClick={async () => {
           if (!confirm(`Erase all progress in ${where}? This can’t be undone. Export it first if you might want it back.`)) return
           resetProgress()
-          if (user) await flush()
+          if (user && !(await markReplaced())) return setMsg('Saved on this device. It will reach your account when you’re back online.')
           setMsg(`Progress in ${where} erased.`)
         }}
       >
