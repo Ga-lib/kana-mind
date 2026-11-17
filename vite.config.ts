@@ -7,7 +7,7 @@ const vercel = JSON.parse(readFileSync(new URL('./vercel.json', import.meta.url)
   headers: { source: string; headers: { key: string; value: string }[] }[]
 }
 const securityHeaders = Object.fromEntries(
-  vercel.headers.find((h) => h.source === '/(.*)')!.headers
+  vercel.headers.find((h) => h.source.startsWith('/((?!__'))!.headers
     .filter((h) => h.key !== 'Strict-Transport-Security')
     .map((h) => [h.key, h.value.replace('; upgrade-insecure-requests', '')]),
 )
