@@ -764,3 +764,17 @@ input[type='range'] { accent-color: var(--ai); width: 100%; max-width: 420px; }
 .auth-side .data-tools { justify-content: flex-start; text-align: left; }
 .auth-tabs button, .wc-mode button { text-transform: none; }
 .account-btn { white-space: nowrap; }
+
+/* speech problem notice */
+.speech-notice {
+  position: fixed; z-index: 80; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(560px, calc(100% - 24px));
+  display: flex; gap: 12px; align-items: flex-start; padding: 14px 14px 14px 16px; border-radius: var(--r-l);
+  background: var(--sheet); border: 1px solid var(--shu); box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.5); animation: sheet-in 0.3s var(--spring);
+}
+.speech-notice > .icon { color: var(--shu); margin-top: 2px; }
+.speech-notice ul { margin: 6px 0 10px; padding-left: 1.1em; font-size: 0.9rem; }
+.speech-notice li { margin: 3px 0; }
+.speech-notice > div { flex: 1; min-width: 0; }
+@media (max-width: 820px) { .speech-notice { bottom: calc(76px + env(safe-area-inset-bottom)); } }
+.sound-check .tip { margin-bottom: 12px; }
+.sound-check .tip ul { margin: 4px 0 0; padding-left: 1.1em; }

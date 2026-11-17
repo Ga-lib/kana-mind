@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { hasJapaneseVoice, speak } from '../lib/speech'
+import { japaneseVoices, resetVoices, speak } from '../lib/speech'
+import { voiceFix } from '../components/SpeechNotice'
 import Icon from '../components/Icon'
 
 const VOWELS: [string, string, string][] = [
@@ -58,25 +59,56 @@ const PARTICLES: [string, string, string][] = [
   ['を', 'o', 'Object marker: みずをのむ (mizu o nomu) = "drink water"'],
 ]
 
-export default function Sounds() {
-  const [noVoice, setNoVoice] = useState(false)
+function SoundCheck() {
+  const [voices, setVoices] = useState(japaneseVoices())
+  const [checked, setChecked] = useState(false)
   useEffect(() => {
-    const t = setTimeout(() => setNoVoice(!hasJapaneseVoice()), 1500)
+    const t = setTimeout(() => {
+      setVoices(japaneseVoices())
+      setChecked(true)
+    }, 1300)
     return () => clearTimeout(t)
   }, [])
+  const fix = voiceFix()
+  return (
+    <div className="panel sound-check">
+      <h2>Sound check</h2>
+      {!checked ? (
+        <p className="muted small-text">Looking for Japanese voices…</p>
+      ) : voices.length ? (
+        <p className="small-text">
+          Japanese voices found: {voices.map((v) => v.name + (v.local ? ' (on this device)' : ' (online)')).join(', ')}.
+        </p>
+      ) : (
+        <div className="tip warn">
+          <Icon name="speaker" size={20} />
+          <div>
+            <p><b>{fix.title}</b></p>
+            <ul>{fix.steps.map((x) => <li key={x}>{x}</li>)}</ul>
+          </div>
+        </div>
+      )}
+      <button
+        className="btn small primary"
+        onClick={() => {
+          resetVoices()
+          speak('あいうえお、こんにちは')
+          setTimeout(() => setVoices(japaneseVoices()), 400)
+        }}
+      >
+        <Icon name="speaker" size={15} /> Test the voice
+      </button>
+      <span className="muted small-text"> You should hear “a i u e o, konnichiwa”.</span>
+    </div>
+  )
+}
+
+export default function Sounds() {
   return (
     <div className="page narrow">
       <h1>Sounds</h1>
       <p className="muted intro">Japanese has few sounds and they never change. Tap anything to hear it.</p>
-      {noVoice && (
-        <div className="tip warn">
-          <Icon name="speaker" size={20} />
-          <p>
-          Your browser didn’t report a Japanese voice yet. Audio may sound wrong. On Windows add “Japanese” under
-          Settings → Time & language → Speech; on Android/iOS install the Japanese TTS voice. Chrome and Edge include one.
-          </p>
-        </div>
-      )}
+      <SoundCheck />
       <div className="panel">
         <h2>Only five vowels, always the same</h2>
         <p className="muted small-text">Every Japanese sound is built on these. Unlike English, they never change.</p>
